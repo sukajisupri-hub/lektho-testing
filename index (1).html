@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nature Explorer - Portal Pencarian Alam (Grounded + Google Images)</title>
+    <meta name="description" content="Temukan keindahan alam dunia. Didukung oleh Gemini (Grounded) dan Google Custom Search.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#065f46',
+                        secondary: '#34d399',
+                        dark: '#043d2c', // UPDATED: Menjadi hijau hutan yang sangat gelap
+                        background: '#fcfaf6', // UPDATED: Menjadi warna krem/beige yang lembut
+                        earth: {
+                            50: '#f5f5f4',
+                            200: '#e7e5e4',
+                            800: '#57534e'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in-down': 'fadeInDown 0.7s ease-out',
+                        'pulse-sm': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'float': 'float 4s ease-in-out infinite',
+                        'bg-pan': 'bgPan 15s linear infinite',
+                        'modal-fade-in': 'modalFadeIn 0.3s ease-out',
+                        'modal-fade-out': 'modalFadeOut 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeInDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateX(20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        float: {
+                            '0%, 100': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        },
+                        bgPan: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                            '100%': { backgroundPosition: '0% 50%' }
+                        },
+                        modalFadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        modalFadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-background font-sans text-dark overflow-x-hidden"> <!-- UPDATED: bg-white -> bg-background -->
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-sm sticky top-0 z-50"> <!-- UPDATED: Mengganti border dengan shadow-sm yang lebih lembut -->
+        <nav class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-seedling text-white text-sm"></i>
+                    </div>
+                    <span class="text-xl font-bold text-dark tracking-tight">Nature<span class="text-primary">Explorer</span></span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8 font-medium">
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('home')" data-key="navHome">Beranda</a>
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('explore')" data-key="navExplore">Jelajahi</a>
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('about')" data-key="navAbout">Tentang</a>
+                    
+                    <!-- Language Selector -->
+                    <div class="relative">
+                        <i class="fa-solid fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <select id="languageSelector" onchange="changeLanguage()" class="appearance-none bg-gray-50 border border-gray-300 rounded-lg py-2 pl-9 pr-8 text-dark font-medium focus:outline-none focus:border-primary cursor-pointer">
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="ja">日本語</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="menuButton" class="md:hidden text-dark p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white shadow-lg border-t border-gray-100">
+            <div class="px-4 pt-2 pb-4 space-y-2 font-medium">
+                <a href="#" class="block text-dark hover:bg-primary/10 hover:text-primary transition-colors p-3 rounded-lg" onclick="event.preventDefault(); showSection('home'); hideMobileMenu()" data-key="navHome">Beranda</a>
+                <a href="#" class="block text-dark hover:bg-primary/10 hover:text-primary transition-colors p-3 rounded-lg" onclick="event.preventDefault(); showSection('explore'); hideMobileMenu()" data-key="navExplore">Jelajahi</a>
+                <a href="#" class="block text-dark hover:bg-primary/10 hover:text-primary transition-colors p-3 rounded-lg" onclick="event.preventDefault(); showSection('about'); hideMobileMenu()" data-key="navAbout">Tentang</a>
+                
+                <!-- Mobile Language Selector -->
+                <div class="relative p-3">
+                    <i class="fa-solid fa-globe absolute left-6 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <select id="languageSelectorMobile" onchange="changeLanguage()" class="w-full appearance-none bg-gray-50 border border-gray-300 rounded-lg py-2 pl-9 pr-8 text-dark font-medium focus:outline-none focus:border-primary cursor-pointer">
+                        <option value="id">Bahasa Indonesia</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10">
+        <!-- Hero Section -->
+        <section id="home" class="section-active py-12 md:py-20 bg-cover bg-center relative overflow-hidden" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto.format&fit=crop&w=2070&q=80');">
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <div class="text-sm font-semibold text-green-600 bg-green-100 rounded-full inline-block px-4 py-1 mb-3">
+                        Grounded (Google Search) + Google Images
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
+                        <span class="text-primary">Nature</span>Explorer
+                    </h1>
+                    <p class="text-lg text-gray-100 mb-8" data-key="heroSubtitle">
+                        Jelajahi keindahan alam dunia dengan artikel dari AI dan gambar dari Google Search.
+                    </p>
+                    
+                    <!-- Search Bar -->
+                    <div class="relative bg-white rounded-full shadow-lg border border-gray-300 p-1 mb-8">
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            placeholder="Cari tentang alam... (contoh: hutan hujan, terumbu karang, satwa liar)"
+                            data-key="searchPlaceholder"
+                            class="w-full pl-6 pr-32 py-4 text-lg border-none bg-transparent focus:outline-none focus:ring-0 text-dark"
+                        >
+                        <button 
+                            id="searchButton"
+                            onclick="performSearch()"
+                            class="absolute right-1 top-1/2 transform -translate-y-1/2 bg-primary text-white px-6 py-3 rounded-full font-medium hover:bg-primary/90 transition-all active:scale-[.98] flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                            aria-label="Cari"
+                        >
+                            <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
+                            <!-- UPDATED: Ikon spinner diubah menjadi jejak kaki (paw) yang berdenyut (pulse) -->
+                            <i class="fa-solid fa-paw fa-pulse hidden" id="loadingSpinner"></i>
+                            <span class="ml-2 hidden sm:inline" id="searchButtonText" data-key="searchButtonText">Cari</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Category Buttons -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                    <!-- UPDATED: Tombol dibuat transparan, lebih bulat, dan teks putih agar menyatu dengan gambar hero -->
+                    <button data-search-term="Hutan Bakau" class="bg-primary/20 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-xl hover:bg-primary/30 transition-all transform hover:scale-[1.02] group category-search-button">
+                        <i class="fa-solid fa-tree text-white text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <div class="font-medium text-white" data-key="catMangrove">Hutan Bakau</div>
+                    </button>
+                    <button data-search-term="Samudra Arktik" class="bg-primary/20 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-xl hover:bg-primary/30 transition-all transform hover:scale-[1.02] group category-search-button">
+                        <i class="fa-solid fa-snowflake text-white text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <div class="font-medium text-white" data-key="catArctic">Samudra Arktik</div>
+                    </button>
+                    <button data-search-term="Gurun Pasir" class="bg-primary/20 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-xl hover:bg-primary/30 transition-all transform hover:scale-[1.02] group category-search-button">
+                        <i class="fa-solid fa-sun text-white text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <div class="font-medium text-white" data-key="catDesert">Gurun Pasir</div>
+                    </button>
+                    <button data-search-term="Burung Langka" class="bg-primary/20 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20 hover:shadow-xl hover:bg-primary/30 transition-all transform hover:scale-[1.02] group category-search-button">
+                        <i class="fa-solid fa-feather text-white text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <div class="font-medium text-white" data-key="catBird">Burung Langka</div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search Results Section -->
+        <section id="searchResults" class="section-hidden bg-white min-h-screen bg-cover bg-center relative">
+            <div class="container mx-auto px-4 py-8">
+                <!-- UPDATED: Kartu artikel dibuat lebih bulat (rounded-2xl), shadow lebih tebal, dan blur lebih kuat -->
+                <div class="max-w-4xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-4 md:p-8">
+                    <div class="mb-6 flex items-center justify-between">
+                        <button onclick="showSection('home')" class="text-primary hover:text-primary/80 font-medium transition-colors flex items-center">
+                            <i class="fa-solid fa-arrow-left mr-2"></i><span data-key="resultsBack">Kembali ke Beranda</span>
+                        </button>
+                        <div class="text-sm text-gray-500 flex items-center">
+                            <i class="fa-regular fa-clock mr-1"></i>
+                            <span id="readingTime"></span>
+                        </div>
+                    </div>
+                    
+                    <article id="articleContent" class="bg-white">
+                        <!-- Article and Image Gallery will be rendered here -->
+                    </article>
+                    
+                    <!-- Loading Indicator -->
+                    <!-- UPDATED: Ikon spinner besar diganti dengan 4 ikon hewan kecil yang berdenyut (pulse) -->
+                    <div id="loadingIndicator" class="hidden text-center py-16">
+                        <div class="flex justify-center space-x-4 mb-4">
+                            <i class="fa-solid fa-otter text-3xl text-primary animate-pulse" style="animation-delay: 0s;"></i>
+                            <i class="fa-solid fa-frog text-3xl text-primary animate-pulse" style="animation-delay: 0.2s;"></i>
+                            <i class="fa-solid fa-hippo text-3xl text-primary animate-pulse" style="animation-delay: 0.4s;"></i>
+                            <i class="fa-solid fa-bugs text-3xl text-primary animate-pulse" style="animation-delay: 0.6s;"></i>
+                        </div>
+                        <p class="text-gray-600" data-key="loadingText">Mencari di web, membuat artikel, dan mengambil gambar...</p>
+                    </div>
+                    
+                    <!-- Grounded Sources Section -->
+                    <div id="sourcesSection" class="mt-12 pt-8 border-t border-gray-200 hidden">
+                        <h3 class="text-xl font-bold text-dark mb-6 flex items-center" data-key="sourcesTitle">
+                            <i class="fa-solid fa-book-open text-primary mr-2"></i> Sumber Artikel (dari Google Search)
+                        </h3>
+                        <ul id="sourcesList" class="space-y-4">
+                            <!-- Sources from Google Search will be rendered here -->
+                        </ul>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div id="commentsSection" class="mt-12 pt-8 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-dark flex items-center" data-key="commentsTitle">
+                                <i class="fa-regular fa-comments text-primary mr-2"></i> Diskusi Pembaca
+                            </h3>
+                            <span id="commentsCount" class="bg-primary text-white text-sm px-3 py-1 rounded-full">0 Komentar</span>
+                        </div>
+
+                        <!-- Comment Form -->
+                        <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                            <h4 class="font-semibold text-dark mb-4" data-key="addCommentTitle">Tambahkan Komentar</h4>
+                            <form id="commentForm">
+                                <div class="mb-4">
+                                    <input 
+                                        type="text" 
+                                        id="commentName"
+                                        placeholder="Nama Anda (opsional)"
+                                        data-key="commentNamePlaceholder"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white"
+                                    >
+                                </div>
+                                <div class="mb-4">
+                                    <textarea 
+                                        id="commentInput" 
+                                        class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary resize-none bg-white text-dark placeholder-gray-500" 
+                                        rows="4" 
+                                        placeholder="Bagikan pemikiran Anda tentang artikel ini..."
+                                        data-key="commentInputPlaceholder"
+                                        required
+                                    ></textarea>
+                                    <div class="text-right text-sm text-gray-500 mt-1">
+                                        <span id="charCount">0</span>/500 <span data-key="commentCharCount">karakter</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <button 
+                                        type="submit" 
+                                        class="bg-primary text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-primary/90 transition-colors active:scale-[.98] flex items-center"
+                                        data-key="commentSubmitButton"
+                                    >
+                                        <i class="fa-regular fa-paper-plane mr-2"></i>
+                                        Kirim Komentar
+                                    </button>
+                                    <div class="text-xs text-gray-500" data-key="commentNote">
+                                        Komentar akan ditampilkan setelah disetujui
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Comments List -->
+                        <div id="commentsList" class="space-y-6">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa-regular fa-comment text-3xl mb-3"></i>
+                                <p data-key="noComments">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Explore Section -->
+        <!-- UPDATED: Menghapus gambar background yang ramai, diganti dengan bg-background yang bersih -->
+        <section id="explore" class="section-hidden py-16 bg-background relative">
+            <div class="container mx-auto px-4 relative z-10">
+                <h2 class="text-3xl font-bold text-center text-dark mb-12" data-key="exploreTitle">Jelajahi Kategori Alam</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <!-- UPDATED: Kartu dibuat lebih bulat (rounded-2xl) -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
+                        <h3 class="text-xl font-bold text-dark mb-4 flex items-center" data-key="terrestrialTitle">
+                            <i class="fa-solid fa-tree text-primary mr-3"></i> Ekosistem Darat
+                        </h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Hutan Hujan Tropis" data-key="terrestrial1" onclick="event.preventDefault()">Hutan Hujan Tropis</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Padang Rumput" data-key="terrestrial2" onclick="event.preventDefault()">Padang Rumput</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Gurun" data-key="terrestrial3" onclick="event.preventDefault()">Gurun</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Tundra" data-key="terrestrial4" onclick="event.preventDefault()">Tundra</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- UPDATED: Kartu dibuat lebih bulat (rounded-2xl) -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
+                        <h3 class="text-xl font-bold text-blue-500 mb-4 flex items-center" data-key="aquaticTitle">
+                            <i class="fa-solid fa-water text-blue-500 mr-3"></i> Ekosistem Perairan
+                        </h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Terumbu Karang" data-key="aquatic1" onclick="event.preventDefault()">Terumbu Karang</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Hutan Bakau" data-key="aquatic2" onclick="event.preventDefault()">Hutan Bakau</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Samudra Dalam" data-key="aquatic3" onclick="event.preventDefault()">Samudra Dalam</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Danau Air Tawar" data-key="aquatic4" onclick="event.preventDefault()">Danau Air Tawar</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- UPDATED: Kartu dibuat lebih bulat (rounded-2xl) -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
+                        <h3 class="text-xl font-bold text-orange-500 mb-4 flex items-center" data-key="biodiversityTitle">
+                            <i class="fa-solid fa-paw text-orange-500 mr-3"></i> Keanekaragaman Hayati
+                        </h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Satwa Liar" data-key="biodiversity1" onclick="event.preventDefault()">Satwa Liar</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Burung Langka" data-key="biodiversity2" onclick="event.preventDefault()">Burung Langka</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Tumbuhan Endemik" data-key="biodiversity3" onclick="event.preventDefault()">Tumbuhan Endemik</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Konservasi Alam" data-key="biodiversity4" onclick="event.preventDefault()">Konservasi Alam</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <!-- UPDATED: Menghapus gambar background yang ramai, diganti dengan bg-background yang bersih -->
+        <section id="about" class="section-hidden py-16 bg-background relative">
+            <div class="container mx-auto px-4 text-center relative z-10">
+                <h2 class="text-3xl font-bold text-dark mb-8" data-key="aboutTitle">Tentang <span class="text-primary">NatureExplorer</span></h2>
+                <div class="max-w-3xl mx-auto">
+                    <p class="text-lg text-gray-600 mb-6 leading-relaxed" data-key="aboutDesc1">
+                        NatureExplorer adalah portal pencarian yang didedikasikan untuk membantu Anda menemukan dan mempelajari keindahan alam dunia. 
+                        Versi ini menggunakan Gemini API dengan Google Search Grounding untuk teks dan Google Custom Search API untuk gambar.
+                    </p>
+                    <!-- UPDATED: Kartu dibuat lebih bulat (rounded-2xl) -->
+                    <p class="text-gray-700 leading-relaxed bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-gray-200" data-key="aboutDesc2">
+                        Tujuan kami adalah menginspirasi kecintaan terhadap alam melalui pendidikan 
+                        dan penjelajahan digital yang terpercaya.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <!-- UPDATED: bg-dark (sekarang menjadi hijau tua) dan border-gray-700 (menjadi hijau lebih terang) -->
+    <footer class="bg-dark text-white py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-seedling text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold text-primary">NatureExplorer</span>
+                    </div>
+                    <p class="text-gray-400 text-sm" data-key="footerSlogan">
+                        Menjelajahi keajaiban alam.
+                    </p>
+                </div>
+                
+                <!-- Categories -->
+                <div>
+                    <h3 class="font-bold mb-4 text-lg" data-key="footerCatTitle">Kategori</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Flora" data-key="footerCat1" onclick="event.preventDefault()">Flora</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Fauna" data-key="footerCat2" onclick="event.preventDefault()">Fauna</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors category-search-button" data-search-term="Ekosistem" data-key="footerCat3" onclick="event.preventDefault()">Ekosistem</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Links -->
+                <div>
+                    <h3 class="font-bold mb-4 text-lg" data-key="footerLinksTitle">Tautan</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('home')" data-key="navHome">Beranda</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('explore')" data-key="navExplore">Jelajahi</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors" onclick="event.preventDefault(); showSection('about')" data-key="navAbout">Tentang</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div>
+                    <h3 class="font-bold mb-4 text-lg" data-key="footerContactTitle">Kontak</h3>
+                    <div class="space-y-2 text-gray-400 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-envelope text-primary"></i>
+                            <!-- Updated placeholder email -->
+                            <span>info@natureexplorer.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-green-800 mt-8 pt-6 text-center text-gray-500 text-sm"> <!-- UPDATED: border-gray-700 -> border-green-800 -->
+                <p data-key="footerCopyright">&copy; 2024 NatureExplorer. Semua hak dilindungi undang-undang.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Modal Elements -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/50 z-[99] hidden animate-modal-fade-in" onclick="hideAllModals()"></div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[100] w-11/12 md:w-1/3 max-w-lg hidden animate-modal-fade-in">
+        <div class="p-6">
+            <h3 id="alertModalTitle" class="text-xl font-bold text-dark mb-4" data-key="modalAlertTitle">Pemberitahuan</h3>
+            <p id="alertModalMessage" class="text-gray-600 mb-6">Pesan alert default.</p>
+            <div class="flex justify-end">
+                <button id="alertModalOk" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors" data-key="modalAlertOK">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[100] w-11/12 md:w-1/3 max-w-lg hidden animate-modal-fade-in">
+        <div class="p-6">
+            <h3 id="confirmModalTitle" class="text-xl font-bold text-dark mb-4" data-key="modalConfirmTitle">Konfirmasi</h3>
+            <p id="confirmModalMessage" class="text-gray-600 mb-6">Apakah Anda yakin?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirmModalCancel" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors" data-key="modalConfirmCancel">
+                    Batal
+                </button>
+                <button id="confirmModalConfirm" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors" data-key="modalConfirmDelete">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- End Custom Modals -->
+
+
+    <script>
+        // --- Gemini API Configuration ---
+        const API_MODEL = "gemini-2.5-flash-preview-09-2025";
+        // PENTING: API Key dikosongkan agar platform dapat menyuntikkannya secara otomatis.
+        const apiKey = "AIzaSyA5ZBYGkKNIGW3OEQc_ZSfc5c0Wmm0ZdN0"; // <-- UPDATED: Removed hardcoded key
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${apiKey}`;
+
+        // --- KONFIGURASI PENCARIAN GAMBAR (Google Custom Search) ---
+        // 1. Dapatkan Kunci API Anda (variabel 'apiKey' di atas sudah cukup)
+        // 2. Buat Mesin Pencari Kustom di https://cse.google.com/ (pastikan "Pencarian Gambar" diaktifkan)
+        // 3. Dapatkan "ID Mesin Telusur" (CX ID) dan masukkan di bawah ini:
+        const CX_ID = "a6bb5a3117d414307"; // <-- UPDATED: Changed to placeholder
+        const CSE_API_URL = "https://www.googleapis.com/customsearch/v1";
+        // --- END KONFIGURASI ---
+
+        // --- LANGUAGE MANAGEMENT ---
+        let currentLanguage = 'id'; // Default language
+        const translations = {
+            'id': {
+                'navHome': 'Beranda',
+                'navExplore': 'Jelajahi',
+                'navAbout': 'Tentang',
+                'heroSubtitle': 'Jelajahi keindahan alam dunia dengan artikel dari AI dan gambar dari Google Search.',
+                'searchPlaceholder': 'Cari tentang alam... (contoh: hutan hujan, terumbu karang, satwa liar)',
+                'searchButtonText': 'Cari',
+                'catMangrove': 'Hutan Bakau',
+                'catArctic': 'Samudra Arktik',
+                'catDesert': 'Gurun Pasir',
+                'catBird': 'Burung Langka',
+                'resultsBack': 'Kembali ke Beranda',
+                'readingTimeSuffix': 'menit membaca',
+                'loadingText': 'Mencari di web, membuat artikel, dan mengambil gambar...',
+                'sourcesTitle': 'Sumber Artikel (dari Google Search)',
+                'commentsTitle': 'Diskusi Pembaca',
+                'commentsSuffix': 'Komentar',
+                'addCommentTitle': 'Tambahkan Komentar',
+                'commentNamePlaceholder': 'Nama Anda (opsional)',
+                'commentInputPlaceholder': 'Bagikan pemikiran Anda tentang artikel ini...',
+                'commentCharCount': 'karakter',
+                'commentSubmitButton': 'Kirim Komentar',
+                'commentNote': 'Komentar akan ditampilkan setelah disetujui',
+                'noComments': 'Belum ada komentar. Jadilah yang pertama berkomentar!',
+                'exploreTitle': 'Jelajahi Kategori Alam',
+                'terrestrialTitle': 'Ekosistem Darat',
+                'terrestrial1': 'Hutan Hujan Tropis',
+                'terrestrial2': 'Padang Rumput',
+                'terrestrial3': 'Gurun',
+                'terrestrial4': 'Tundra',
+                'aquaticTitle': 'Ekosistem Perairan',
+                'aquatic1': 'Terumbu Karang',
+                'aquatic2': 'Hutan Bakau',
+                'aquatic3': 'Samudra Dalam',
+                'aquatic4': 'Danau Air Tawar',
+                'biodiversityTitle': 'Keanekaragaman Hayati',
+                'biodiversity1': 'Satwa Liar',
+                'biodiversity2': 'Burung Langka',
+                'biodiversity3': 'Tumbuhan Endemik',
+                'biodiversity4': 'Konservasi Alam',
+                'aboutTitle': 'Tentang NatureExplorer',
+                'aboutDesc1': 'NatureExplorer adalah portal pencarian yang didedikasikan untuk membantu Anda menemukan dan mempelajari keindahan alam dunia. Versi ini menggunakan Gemini API dengan Google Search Grounding untuk teks dan Google Custom Search API untuk gambar.',
+                'aboutDesc2': 'Tujuan kami adalah menginspirasi kecintaan terhadap alam melalui pendidikan dan penjelajahan digital yang terpercaya.',
+                'footerSlogan': 'Menjelajahi keajaiban alam.',
+                'footerCatTitle': 'Kategori',
+                'footerCat1': 'Flora',
+                'footerCat2': 'Fauna',
+                'footerCat3': 'Ekosistem',
+                'footerLinksTitle': 'Tautan',
+                'footerContactTitle': 'Kontak',
+                'footerCopyright': '© 2024 NatureExplorer. Semua hak dilindungi undang-undang.',
+                'modalAlertTitle': 'Pemberitahuan',
+                'modalAlertOK': 'OK',
+                'modalConfirmTitle': 'Konfirmasi',
+                'modalConfirmCancel': 'Batal',
+                'modalConfirmDelete': 'Hapus',
+                'errorInput': 'Mohon masukkan kata kunci pencarian.',
+                'errorCharLimit': 'Komentar terlalu panjang. Maksimal 500 karakter.',
+                'errorCommentEmpty': 'Mohon isi komentar Anda.',
+                'confirmDelete': 'Apakah Anda yakin ingin menghapus komentar ini?',
+                'replyPrefix': 'Balas',
+                'likePrefix': 'Suka'
+            },
+            'en': {
+                'navHome': 'Home',
+                'navExplore': 'Explore',
+                'navAbout': 'About',
+                'heroSubtitle': 'Explore the world\'s natural beauty with AI articles and Google Search images.',
+                'searchPlaceholder': 'Search about nature... (e.g., rainforest, coral reefs, wildlife)',
+                'searchButtonText': 'Search',
+                'catMangrove': 'Mangrove Forest',
+                'catArctic': 'Arctic Ocean',
+                'catDesert': 'Desert',
+                'catBird': 'Rare Birds',
+                'resultsBack': 'Back to Home',
+                'readingTimeSuffix': 'min read',
+                'loadingText': 'Searching the web, generating article, and fetching images...',
+                'sourcesTitle': 'Article Sources (from Google Search)',
+                'commentsTitle': 'Reader Discussion',
+                'commentsSuffix': 'Comments',
+                'addCommentTitle': 'Add a Comment',
+                'commentNamePlaceholder': 'Your Name (optional)',
+                'commentInputPlaceholder': 'Share your thoughts about this article...',
+                'commentCharCount': 'characters',
+                'commentSubmitButton': 'Submit Comment',
+                'commentNote': 'Comments will be displayed after approval',
+                'noComments': 'No comments yet. Be the first to comment!',
+                'exploreTitle': 'Explore Nature Categories',
+                'terrestrialTitle': 'Terrestrial Ecosystems',
+                'terrestrial1': 'Tropical Rainforest',
+                'terrestrial2': 'Grasslands',
+                'terrestrial3': 'Desert',
+                'terrestrial4': 'Tundra',
+                'aquaticTitle': 'Aquatic Ecosystems',
+                'aquatic1': 'Coral Reefs',
+                'aquatic2': 'Mangrove Forest',
+                'aquatic3': 'Deep Sea',
+                'aquatic4': 'Freshwater Lakes',
+                'biodiversityTitle': 'Biodiversity',
+                'biodiversity1': 'Wildlife',
+                'biodiversity2': 'Rare Birds',
+                'biodiversity3': 'Endemic Plants',
+                'biodiversity4': 'Nature Conservation',
+                'aboutTitle': 'About NatureExplorer',
+                'aboutDesc1': 'NatureExplorer is a search portal dedicated to helping you discover and learn about the world\'s natural beauty. This version uses the Gemini API with Google Search Grounding for text and the Google Custom Search API for images.',
+                'aboutDesc2': 'Our goal is to inspire a love for nature through education and trusted digital exploration.',
+                'footerSlogan': 'Exploring the wonders of nature.',
+                'footerCatTitle': 'Categories',
+                'footerCat1': 'Flora',
+                'footerCat2': 'Fauna',
+                'footerCat3': 'Ecosystems',
+                'footerLinksTitle': 'Links',
+                'footerContactTitle': 'Contact',
+                'footerCopyright': '© 2024 NatureExplorer. All rights reserved.',
+                'modalAlertTitle': 'Notification',
+                'modalAlertOK': 'OK',
+                'modalConfirmTitle': 'Confirmation',
+                'modalConfirmCancel': 'Cancel',
+                'modalConfirmDelete': 'Delete',
+                'errorInput': 'Please enter a search query.',
+                'errorCharLimit': 'Comment is too long. 500 characters maximum.',
+                'errorCommentEmpty': 'Please fill in your comment.',
+                'confirmDelete': 'Are you sure you want to delete this comment?',
+                'replyPrefix': 'Reply',
+                'likePrefix': 'Like'
+            },
+            'es': {
+                'navHome': 'Inicio',
+                'navExplore': 'Explorar',
+                'navAbout': 'Acerca de',
+                'heroSubtitle': 'Explora la belleza natural del mundo con artículos de IA e imágenes de Google Search.',
+                'searchPlaceholder': 'Buscar sobre naturaleza... (ej: selva tropical, arrecifes de coral, vida silvestre)',
+                'searchButtonText': 'Buscar',
+                'catMangrove': 'Manglar',
+                'catArctic': 'Océano Ártico',
+                'catDesert': 'Desierto',
+                'catBird': 'Aves Raras',
+                'resultsBack': 'Volver al Inicio',
+                'readingTimeSuffix': 'min de lectura',
+                'loadingText': 'Buscando en la web, generando artículo y obteniendo imágenes...',
+                'sourcesTitle': 'Fuentes del Artículo (de Google Search)',
+                'commentsTitle': 'Discusión de Lectores',
+                'commentsSuffix': 'Comentarios',
+                'addCommentTitle': 'Añadir un Comentario',
+                'commentNamePlaceholder': 'Tu Nombre (opcional)',
+                'commentInputPlaceholder': 'Comparte tu opinión sobre este artículo...',
+                'commentCharCount': 'caracteres',
+                'commentSubmitButton': 'Enviar Comentario',
+                'commentNote': 'Los comentarios se mostrarán después de ser aprobados',
+                'noComments': 'Aún no hay comentarios. ¡Sé el primero en comentar!',
+                'exploreTitle': 'Explorar Categorías de Naturaleza',
+                'terrestrialTitle': 'Ecosistemas Terrestres',
+                'terrestrial1': 'Selva Tropical',
+                'terrestrial2': 'Praderas',
+                'terrestrial3': 'Desierto',
+                'terrestrial4': 'Tundra',
+                'aquaticTitle': 'Ecosistemas Acuáticos',
+                'aquatic1': 'Arrecifes de Coral',
+                'aquatic2': 'Manglar',
+                'aquatic3': 'Mar Profundo',
+                'aquatic4': 'Lagos de Agua Dulce',
+                'biodiversityTitle': 'Biodiversidad',
+                'biodiversity1': 'Vida Silvestre',
+                'biodiversity2': 'Aves Raras',
+                'biodiversity3': 'Plantas Endémicas',
+                'biodiversity4': 'Conservación de la Naturaleza',
+                'aboutTitle': 'Acerca de NatureExplorer',
+                'aboutDesc1': 'NatureExplorer es un portal de búsqueda dedicado a ayudarte a descubrir y aprender sobre la belleza natural del mundo. Esta versión utiliza la API de Gemini con Google Search Grounding para texto y la API de Google Custom Search para imágenes.',
+                'aboutDesc2': 'Nuestro objetivo es inspirar el amor por la naturaleza a través de la educación y la exploración digital confiable.',
+                'footerSlogan': 'Explorando las maravillas de la naturaleza.',
+                'footerCatTitle': 'Categorías',
+                'footerCat1': 'Flora',
+                'footerCat2': 'Fauna',
+                'footerCat3': 'Ecosistemas',
+                'footerLinksTitle': 'Enlaces',
+                'footerContactTitle': 'Contacto',
+                'footerCopyright': '© 2024 NatureExplorer. Todos los derechos reservados.',
+                'modalAlertTitle': 'Notificación',
+                'modalAlertOK': 'OK',
+                'modalConfirmTitle': 'Confirmación',
+                'modalConfirmCancel': 'Cancelar',
+                'modalConfirmDelete': 'Eliminar',
+                'errorInput': 'Por favor, introduce una consulta de búsqueda.',
+                'errorCharLimit': 'El comentario es demasiado largo. Máximo 500 caracteres.',
+                'errorCommentEmpty': 'Por favor, rellena tu comentario.',
+                'confirmDelete': '¿Estás seguro de que quieres eliminar este comentario?',
+                'replyPrefix': 'Responder',
+                'likePrefix': 'Me gusta'
+            },
+            'fr': {
+                'navHome': 'Accueil',
+                'navExplore': 'Explorer',
+                'navAbout': 'À propos',
+                'heroSubtitle': 'Explorez la beauté naturelle du monde avec des articles de l\'IA et des images de Google Search.',
+                'searchPlaceholder': 'Rechercher sur la nature... (ex: forêt tropicale, récifs coralliens, faune)',
+                'searchButtonText': 'Rechercher',
+                'catMangrove': 'Forêt de Mangrove',
+                'catArctic': 'Océan Arctique',
+                'catDesert': 'Désert',
+                'catBird': 'Oiseaux Rares',
+                'resultsBack': 'Retour à l\'Accueil',
+                'readingTimeSuffix': 'min de lecture',
+                'loadingText': 'Recherche sur le web, génération de l\'article et récupération des images...',
+                'sourcesTitle': 'Sources de l\'Article (de Google Search)',
+                'commentsTitle': 'Discussion des Lecteurs',
+                'commentsSuffix': 'Commentaires',
+                'addCommentTitle': 'Ajouter un Commentaire',
+                'commentNamePlaceholder': 'Votre Nom (optionnel)',
+                'commentInputPlaceholder': 'Partagez vos réflexions sur cet article...',
+                'commentCharCount': 'caractères',
+                'commentSubmitButton': 'Envoyer le Commentaire',
+                'commentNote': 'Les commentaires seront affichés après approbation',
+                'noComments': 'Aucun commentaire pour le moment. Soyez le premier à commenter !',
+                'exploreTitle': 'Explorer les Catégories de Nature',
+                'terrestrialTitle': 'Écosystèmes Terrestres',
+                'terrestrial1': 'Forêt Tropicale Humide',
+                'terrestrial2': 'Prairies',
+                'terrestrial3': 'Désert',
+                'terrestrial4': 'Toundra',
+                'aquaticTitle': 'Écosystèmes Aquatiques',
+                'aquatic1': 'Récifs Coralliens',
+                'aquatic2': 'Forêt de Mangrove',
+                'aquatic3': 'Mer Profonde',
+                'aquatic4': 'Lacs d\'Eau Douce',
+                'biodiversityTitle': 'Biodiversité',
+                'biodiversity1': 'Faune Sauvage',
+                'biodiversity2': 'Oiseaux Rares',
+                'biodiversity3': 'Plantes Endémiques',
+                'biodiversity4': 'Conservation de la Nature',
+                'aboutTitle': 'À propos de NatureExplorer',
+                'aboutDesc1': 'NatureExplorer est un portail de recherche dédié à vous aider à découvrir et à en apprendre davantage sur la beauté naturelle du monde. Cette version utilise l\'API Gemini avec Google Search Grounding pour le texte et l\'API Google Custom Search pour les images.',
+                'aboutDesc2': 'Notre objectif est d\'inspirer l\'amour de la nature par l\'éducation et l\'exploration numérique de confiance.',
+                'footerSlogan': 'Explorer les merveilles de la nature.',
+                'footerCatTitle': 'Catégories',
+                'footerCat1': 'Flore',
+                'footerCat2': 'Faune',
+                'footerCat3': 'Écosystèmes',
+                'footerLinksTitle': 'Liens',
+                'footerContactTitle': 'Contact',
+                'footerCopyright': '© 2024 NatureExplorer. Tous droits réservés.',
+                'modalAlertTitle': 'Notification',
+                'modalAlertOK': 'OK',
+                'modalConfirmTitle': 'Confirmation',
+                'modalConfirmCancel': 'Annuler',
+                'modalConfirmDelete': 'Supprimer',
+                'errorInput': 'Veuillez saisir une requête de recherche.',
+                'errorCharLimit': 'Le commentaire est trop long. 500 caractères maximum.',
+                'errorCommentEmpty': 'Veuillez remplir votre commentaire.',
+                'confirmDelete': 'Êtes-vous sûr de vouloir supprimer ce commentaire ?',
+                'replyPrefix': 'Répondre',
+                'likePrefix': 'J\'aime'
+            },
+            'ja': {
+                'navHome': 'ホーム',
+                'navExplore': '探索',
+                'navAbout': '概要',
+                'heroSubtitle': 'AI記事とGoogle検索画像で、世界の自然の美しさを探検しましょう。',
+                'searchPlaceholder': '自然について検索... (例: 熱帯雨林, サンゴ礁, 野生動物)',
+                'searchButtonText': '検索',
+                'catMangrove': 'マングローブ林',
+                'catArctic': '北極海',
+                'catDesert': '砂漠',
+                'catBird': '珍しい鳥',
+                'resultsBack': 'ホームに戻る',
+                'readingTimeSuffix': '分で読めます',
+                'loadingText': 'ウェブを検索し、記事を生成し、画像を取得しています...',
+                'sourcesTitle': '記事のソース (Google Searchより)',
+                'commentsTitle': '読者のディスカッション',
+                'commentsSuffix': 'コメント',
+                'addCommentTitle': 'コメントを追加',
+                'commentNamePlaceholder': 'お名前 (任意)',
+                'commentInputPlaceholder': 'この記事についての感想をシェアしてください...',
+                'commentCharCount': '文字',
+                'commentSubmitButton': 'コメントを送信',
+                'commentNote': 'コメントは承認後に表示されます',
+                'noComments': 'まだコメントはありません。一番乗りでコメントしましょう！',
+                'exploreTitle': '自然カテゴリを探索',
+                'terrestrialTitle': '陸上生態系',
+                'terrestrial1': '熱帯雨林',
+                'terrestrial2': '草原',
+                'terrestrial3': '砂漠',
+                'terrestrial4': 'ツンドラ',
+                'aquaticTitle': '水生生態系',
+                'aquatic1': 'サンゴ礁',
+                'aquatic2': 'マングローブ林',
+                'aquatic3': '深海',
+                'aquatic4': '淡水湖',
+                'biodiversityTitle': '生物多様性',
+                'biodiversity1': '野生動物',
+                'biodiversity2': '珍しい鳥',
+                'biodiversity3': '固有植物',
+                'biodiversity4': '自然保護',
+                'aboutTitle': 'NatureExplorerについて',
+                'aboutDesc1': 'NatureExplorerは、世界の自然の美しさを発見し、学ぶための検索ポータルです。このバージョンでは、テキストにGemini APIとGoogle Search Groundingを使用し、画像にGoogle Custom Search APIを使用しています。',
+                'aboutDesc2': '私たちの目標は、教育と信頼できるデジタル探索を通じて、自然への愛を育むことです。',
+                'footerSlogan': '自然の驚異を探る。',
+                'footerCatTitle': 'カテゴリ',
+                'footerCat1': '植物',
+                'footerCat2': '動物',
+                'footerCat3': '生態系',
+                'footerLinksTitle': 'リンク',
+                'footerContactTitle': 'お問い合わせ',
+                'footerCopyright': '© 2024 NatureExplorer. 全著作権所有。',
+                'modalAlertTitle': '通知',
+                'modalAlertOK': 'OK',
+                'modalConfirmTitle': '確認',
+                'modalConfirmCancel': 'キャンセル',
+                'modalConfirmDelete': '削除',
+                'errorInput': '検索クエリを入力してください。',
+                'errorCharLimit': 'コメントが長すぎます。最大500文字です。',
+                'errorCommentEmpty': 'コメントを入力してください。',
+                'confirmDelete': 'このコメントを本当に削除しますか？',
+                'replyPrefix': '返信',
+                'likePrefix': 'いいね'
+            }
+        };
+
+        /**
+         * Applies the currently selected language translations to all [data-key] elements.
+         */
+        function applyTranslations() {
+            const lang = currentLanguage;
+            document.documentElement.lang = lang; // Set the lang attribute on the <html> tag
+
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                const translation = translations[lang][key];
+                if (translation) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translation;
+                    } else {
+                        // Special case for submit button to keep the icon
+                        if (el.dataset.key === 'commentSubmitButton') {
+                            el.innerHTML = `<i class="fa-regular fa-paper-plane mr-2"></i> ${translation}`;
+                        } else {
+                            el.innerHTML = translation;
+                        }
+                    }
+                }
+            });
+
+            // Update the 'noComments' placeholder text as well
+            const noCommentsEl = document.querySelector('#commentsList [data-key="noComments"]');
+            if (noCommentsEl) {
+                noCommentsEl.innerHTML = translations[lang]['noComments'];
+            }
+        }
+
+        /**
+         * Changes the language, saves it to localStorage, and applies translations.
+         */
+        function changeLanguage() {
+            const newLang = document.getElementById('languageSelector').value;
+            currentLanguage = newLang;
+            localStorage.setItem('nature_lang', newLang);
+            
+            // Sync both dropdowns
+            document.getElementById('languageSelector').value = newLang;
+            document.getElementById('languageSelectorMobile').value = newLang;
+
+            applyTranslations();
+        }
+
+        /**
+         * Loads the saved language from localStorage or defaults to 'id'.
+         */
+        function loadLanguage() {
+            const savedLang = localStorage.getItem('nature_lang') || 'id';
+            currentLanguage = savedLang;
+            document.getElementById('languageSelector').value = savedLang;
+            document.getElementById('languageSelectorMobile').value = savedLang;
+            applyTranslations();
+        }
+
+        /**
+         * Gets the appropriate system prompt for the Gemini API based on the current language.
+         * @param {string} lang - The current language code (e.g., 'en', 'id').
+         * @returns {string} The system instruction prompt.
+         */
+        function getSystemPrompt(lang) {
+            if (lang === 'en') {
+                return `You are an ecologist and science writer. Your task is to answer user questions ONLY about nature topics (flora, fauna, ecosystems, geology, conservation, etc.).
+                1. Answer ONLY in English.
+                2. **If the topic requested is NOT about nature (e.g., recipes, technology, sports), you MUST politely decline.** Use an HTML <p> tag stating you can only provide information about nature.
+                3. If the topic is about nature, use search results (tools) to create a comprehensive, factual, and engaging article.
+                4. Write in a positive, clear tone suitable for an audience under 18 (student/teenager).
+                5. **Format your answer as PURE HTML.** Use <p>, <h2> (for subheadings), <h3>. For lists, ONLY use <ul><li>item 1</li><li>item 2</li></ul> format.
+                6. **NEVER use markdown characters like '*' or '-' for lists.**
+                7. The article should be in-depth, at least 4-5 paragraphs (if the topic is about nature).
+                8. DO NOT include a main title (<h1>) or description; only provide the article content (starting with <p>).`;
+            } else if (lang === 'es') {
+                return `Eres un ecólogo y escritor científico. Tu tarea es responder preguntas de los usuarios SOLO sobre temas de naturaleza (flora, fauna, ecosistemas, geología, conservación, etc.).
+                1. Responde SOLO en Español.
+                2. **Si el tema solicitado NO es sobre naturaleza (ej: recetas, tecnología, deportes), DEBES rechazarlo amablemente.** Usa una etiqueta HTML <p> indicando que solo puedes proporcionar información sobre naturaleza.
+                3. Si el tema es sobre naturaleza, usa los resultados de búsqueda (herramientas) para crear un artículo completo, fáctico y atractivo.
+                4. Escribe en un tono positivo y claro, adecuado para una audiencia menor de 18 años (estudiantes/adolescentes).
+                5. **Formatea tu respuesta como HTML PURO.** Usa <p>, <h2> (para subtítulos), <h3>. Para listas, SOLO usa el formato <ul><li>ítem 1</li><li>ítem 2</li></ul>.
+                6. **NUNCA uses caracteres markdown como '*' o '-' para las listas.**
+                7. El artículo debe ser detallado, de al menos 4-5 párrafos (si el tema es sobre naturaleza).
+                8. NO incluyas un título principal (<h1>) o descripción; solo proporciona el contenido del artículo (comenzando con <p>).`;
+            } else if (lang === 'fr') {
+                return `Vous êtes un écologiste et un rédacteur scientifique. Votre tâche est de répondre aux questions des utilisateurs UNIQUEMENT sur des sujets liés à la nature (flore, faune, écosystèmes, géologie, conservation, etc.).
+                1. Répondez UNIQUEMENT en Français.
+                2. **Si le sujet demandé N'EST PAS lié à la nature (ex: recettes, technologie, sport), vous DEVEZ poliment refuser.** Utilisez une balise HTML <p> indiquant que vous ne pouvez fournir que des informations sur la nature.
+                3. Si le sujet concerne la nature, utilisez les résultats de recherche (outils) pour créer un article complet, factuel et engageant.
+                4. Écrivez sur un ton positif et clair, adapté à un public de moins de 18 ans (étudiants/adolescents).
+                5. **Formatez votre réponse en HTML PUR.** Utilisez <p>, <h2> (pour les sous-titres), <h3>. Pour les listes, utilisez UNIQUEMENT le format <ul><li>élément 1</li><li>élément 2</li></ul>.
+                6. **N'utilisez JAMAIS de caractères markdown comme '*' ou '-' pour les listes.**
+                7. L'article doit être approfondi, d'au moins 4-5 paragraphes (si le sujet concerne la nature).
+                8. N'incluez PAS de titre principal (<h1>) ou de description ; fournissez uniquement le contenu de l'article (en commençant par <p>).`;
+            } else if (lang === 'ja') {
+                return `あなたは生態学者であり、科学ライターです。あなたの任務は、自然に関するトピック（植物、動物、生態系、地質学、保全など）についてのユーザーの質問にのみ答えることです。
+                1. 回答は日本語のみで行ってください。
+                2. **リクエストされたトピックが自然に関するものでない場合（例：レシピ、テクノロジー、スポーツ）、丁寧に断らなければなりません。** 自然に関する情報しか提供できない旨をHTMLの<p>タグを使用して記述してください。
+                3. トピックが自然に関するものである場合、検索結果（ツール）を使用して、包括的で事実に基づいた魅力的な記事を作成してください。
+                4. 18歳未満の読者（学生/ティーンエイジャー）に適した、ポジティブで分かりやすいトーンで執筆してください。
+                5. **回答は純粋なHTMLでフォーマットしてください。** <p>、<h2>（小見出し）、<h3>を使用してください。リストには<ul><li>項目1</li><li>項目2</li></ul>形式のみを使用してください。
+                6. **リストに「*」や「-」のようなマークダウン文字を決して使用しないでください。**
+                7. 記事は詳細で、少なくとも4～5パラグラフ（自然に関するトピックの場合）にしてください。
+                8. メインタイトル（<h1>）や説明は含めず、記事のコンテンツのみ（<p>から始めて）を提供してください。`;
+            } else {
+                // Default to Indonesian
+                return `Anda adalah ahli ekologi dan penulis sains. Tugas Anda adalah menjawab pertanyaan pengguna HANYA tentang topik alam (flora, fauna, ekosistem, geologi, konservasi, dll.).
+                1. Jawab HANYA dalam Bahasa Indonesia.
+                2. **Jika topik yang diminta BUKAN tentang alam (misalnya: resep, teknologi, olahraga), Anda HARUS menolak dengan sopan.** Gunakan format HTML <p> yang menyatakan bahwa Anda hanya bisa memberikan informasi tentang alam.
+                3. Jika topiknya tentang alam, gunakan hasil pencarian (tools) untuk membuat artikel yang komprehensif, faktual, dan menarik.
+                4. Tulis dengan nada yang positif, jelas, dan sesuai untuk audiens di bawah 18 tahun (usia pelajar/remaja).
+                5. **Format jawaban Anda SEBAGAI HTML MURNI.** Gunakan tag <p>, <h2> (untuk subjudul), <h3>. Untuk daftar, HANYA gunakan format <ul><li>item 1</li><li>item 2</li></ul>.
+                6. **JANGAN PERNAH menggunakan karakter markdown seperti '*' atau '-' untuk daftar.**
+                7. Artikel harus mendalam, setidaknya 4-5 paragraf (jika topiknya tentang alam).
+                8. JANGAN menyertakan judul utama (<h1>) atau deskripsi; hanya berikan isi artikel (dimulai dengan <p>).`;
+            }
+        }
+        
+        // --- Global State & Utility Functions ---
+        let currentArticleId = '';
+        let comments = [];
+        let commentToDeleteId = null; 
+        let confirmAction = null; 
+
+        // --- Custom Modal Functions ---
+        const modalOverlay = document.getElementById('modalOverlay');
+        const alertModalEl = document.getElementById('alertModal');
+        const alertModalMessage = document.getElementById('alertModalMessage');
+        const alertModalOk = document.getElementById('alertModalOk');
+        
+        const confirmModalEl = document.getElementById('confirmModal');
+        const confirmModalMessage = document.getElementById('confirmModalMessage');
+        const confirmModalCancel = document.getElementById('confirmModalCancel');
+        const confirmModalConfirm = document.getElementById('confirmModalConfirm');
+
+        function showAlertModal(message) {
+            alertModalMessage.textContent = message;
+            modalOverlay.classList.remove('hidden');
+            alertModalEl.classList.remove('hidden');
+        }
+
+        function hideAlertModal() {
+            alertModalEl.classList.add('hidden');
+            modalOverlay.classList.add('hidden');
+        }
+
+        function showConfirmModal(message, onConfirmCallback) {
+            confirmModalMessage.textContent = message;
+            confirmAction = onConfirmCallback; // Store the callback
+            modalOverlay.classList.remove('hidden');
+            confirmModalEl.classList.remove('hidden');
+        }
+
+        function hideConfirmModal() {
+            confirmModalEl.classList.add('hidden');
+            modalOverlay.classList.add('hidden');
+            confirmAction = null; // Clear the callback
+        }
+        
+        function hideAllModals() {
+            hideAlertModal();
+            hideConfirmModal();
+        }
+
+        // --- Override native alert with custom modal ---
+        function alertModal(message) {
+            showAlertModal(message);
+        }
+        // --- End Custom Modal Functions ---
+
+        /**
+         * Capitalizes the first letter of a string.
+         * @param {string} string - The input string.
+         * @returns {string} The capitalized string.
+         */
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        /**
+         * Calculates a "time since" string for a given date.
+         * @param {Date} date - The date object to compare.
+         * @returns {string} A relative time string (e.g., "5 menit yang lalu").
+         */
+        function timeSince(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " tahun yang lalu";
+            
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " bulan yang lalu";
+            
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " hari yang lalu";
+            
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " jam yang lalu";
+            
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " menit yang lalu";
+            
+            return "baru saja";
+        }
+
+        // --- UI & Navigation Functions ---
+
+        /**
+         * Shows a specific section and hides all others.
+         * @param {string} sectionId - The ID of the section to show.
+         */
+        function showSection(sectionId) {
+            document.querySelectorAll('main section').forEach(section => {
+                section.classList.remove('section-active');
+                section.classList.add('section-hidden');
+            });
+            
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('section-hidden');
+                targetSection.classList.add('section-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function hideMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }
+
+        // --- Search Functions ---
+
+        /**
+         * Main function to initiate a search from the input field.
+         */
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput.value.trim();
+            
+            if (query) {
+                searchNature(query);
+            } else {
+                alertModal(translations[currentLanguage].errorInput);
+                searchInput.classList.add('ring-2', 'ring-red-500');
+                setTimeout(() => {
+                    searchInput.classList.remove('ring-2', 'ring-red-500');
+                }, 2000);
+            }
+        }
+
+        /**
+         * Initiates a search from a category button.
+         * @param {string} category - The search term from the category.
+         */
+        function searchCategory(category) {
+            document.getElementById('searchInput').value = category;
+            searchNature(category);
+        }
+
+        /**
+         * Fetches a URL with exponential backoff for retries.
+         * @param {string} url - The URL to fetch.
+         * @param {object} options - Fetch options (method, headers, body).
+         * @param {number} maxRetries - The maximum number of retries.
+         * @returns {Promise<Response>} The fetch response.
+         */
+        async function fetchWithBackoff(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return response; // Return the whole response
+                    }
+                    if (response.status === 429 || response.status >= 500) {
+                        // Retry on rate limit or server errors
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        // console.warn(`API call failed with status ${response.status}. Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    // Don't retry on other client errors (e.g., 400 Bad Request)
+                    throw new Error(`API call failed with status ${response.status}: ${response.statusText}`);
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error; // Throw error on last attempt
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    // console.warn(`Fetch error. Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("Maximum retries reached for API call.");
+        }
+
+        /**
+         * Fetches images from the Google Custom Search API.
+         * @param {string} query - The search query.
+         * @returns {Promise<Array|object>} An array of image items or an error object.
+         */
+        async function fetchGoogleImages(query) {
+            if (CX_ID === "MASUKKAN_CX_ID_ANDA_DI_SINI") {
+                console.warn("CX_ID is not set. Skipping image search.");
+                return { error: "CX_ID_NOT_SET" }; // Return specific error
+            }
+            
+            const q_lang = {
+                'id': 'alam foto resolusi tinggi',
+                'en': 'nature high resolution photo',
+                'es': 'naturaleza foto alta resolución',
+                'fr': 'nature photo haute résolution',
+                'ja': '自然 高解像度 写真'
+            };
+            
+            const params = new URLSearchParams({
+                key: apiKey,
+                cx: CX_ID,
+                q: `${query} ${q_lang[currentLanguage] || q_lang['en']}`, // Dynamic query
+                searchType: 'image',
+                num: 4, // Fetch 4 images
+                safe: 'active'
+            });
+            
+            const url = `${CSE_API_URL}?${params.toString()}`;
+            
+            try {
+                const response = await fetchWithBackoff(url, { method: 'GET' });
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error?.message || 'Failed to fetch from CSE API');
+                }
+                
+                return result.items || []; // Return the 'items' array
+            } catch (error) {
+                console.error("Failed to fetch Google Search images:", error);
+                return { error: error.message }; // Return error object
+            }
+        }
+        
+        /**
+         * Fetches text content from the Gemini API with grounding.
+         * @param {string} query - The search query.
+         * @returns {Promise<object>} An object containing 'content' and 'sources'.
+         */
+        async function fetchGeminiContent(query) {
+            const userQuery_lang = {
+                'id': `Buatkan saya artikel ensiklopedia interaktif tentang: ${query}. Berikan fakta menarik dan penjelasan yang mudah dipahami.`,
+                'en': `Make me an interactive encyclopedia article about: ${query}. Provide interesting facts and easy-to-understand explanations.`,
+                'es': `Escríbeme un artículo de enciclopedia interactivo sobre: ${query}. Proporciona datos interesantes y explicaciones fáciles de entender.`,
+                'fr': `Faites-moi un article d'encyclopédie interactif sur : ${query}. Fournissez des faits intéressants et des explications faciles à comprendre.`,
+                'ja': `${query} についてのインタラクティブな百科事典の記事を作成してください。興味深い事実と分かりやすい説明を提供してください。`
+            };
+
+            const userQuery = userQuery_lang[currentLanguage] || userQuery_lang['en'];
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: getSystemPrompt(currentLanguage) }] } // Use dynamic prompt
+            };
+            
+            const response = await fetchWithBackoff(geminiApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+
+            if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                 const errorMessage = result.error?.message || "Invalid or empty response structure from Gemini API.";
+                 console.error("API Response Error:", errorMessage, result);
+                 throw new Error(`Gagal mendapatkan konten artikel: ${errorMessage}`);
+            }
+            
+            const text = candidate.content.parts[0].text;
+            let sources = [];
+            const groundingMetadata = candidate.groundingMetadata;
+            if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                 sources = groundingMetadata.groundingAttributions
+                    .map(att => ({ uri: att.web?.uri, title: att.web?.title }))
+                    .filter(src => src.uri && src.title);
+            }
+            
+            return { content: text, sources: sources };
+        }
+
+        /**
+         * Orchestrates the search, fetching both text and images, then displaying them.
+         * @param {string} query - The search query.
+         */
+        async function searchNature(query) {
+            toggleLoading(true);
+            showSection('searchResults');
+            document.getElementById('articleContent').innerHTML = ''; // Clear previous content
+
+            try {
+                // Run both API calls (text and images) in parallel
+                const [geminiData, imagesData] = await Promise.all([
+                    fetchGeminiContent(query),
+                    fetchGoogleImages(query) 
+                ]);
+
+                // Pass all fetched data to the display function
+                displayArticle(geminiData, imagesData, query);
+                
+            } catch (error) {
+                console.error("Search failed:", error);
+                displayError(`Gagal mencari informasi. Kesalahan: ${error.message}.`);
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        /**
+         * Toggles the loading state of the UI.
+         * @param {boolean} isLoading - Whether to show or hide the loading state.
+         */
+        function toggleLoading(isLoading) {
+            const searchButton = document.getElementById('searchButton');
+            const searchIcon = document.getElementById('searchIcon');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const searchButtonText = document.getElementById('searchButtonText');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const articleContent = document.getElementById('articleContent');
+
+            searchButton.disabled = isLoading;
+            searchIcon.classList.toggle('hidden', isLoading);
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+            if (searchButtonText) {
+                searchButtonText.textContent = isLoading ? 'Mencari...' : 'Cari';
+            }
+
+            if (isLoading) {
+                loadingIndicator.classList.remove('hidden');
+                articleContent.classList.add('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Displays the fetched article, images, and sources.
+         * @param {object} geminiData - The object from fetchGeminiContent { content, sources }.
+         * @param {Array|object} imagesData - The array of image items or error object from fetchGoogleImages.
+         * @param {string} query - The original search query.
+         */
+        function displayArticle(geminiData, imagesData, query) {
+            // --- Set Article Background ---
+            const searchResultsSection = document.getElementById('searchResults');
+            const bgImageUrl = (imagesData && imagesData.length > 0 && imagesData[0].image.thumbnailLink) ? imagesData[0].image.thumbnailLink : '';
+            
+            if (bgImageUrl) {
+                // UPDATED: Removed the white linear-gradient overlay to make the background image clearer
+                searchResultsSection.style.backgroundImage = `url('${bgImageUrl}')`;
+            } else {
+                searchResultsSection.style.backgroundImage = 'none'; // Clear BG if no image
+            }
+            // --- End Background Block ---
+
+            const { content, sources } = geminiData; // Unpack text data
+            
+            // Clean the content of any markdown asterisks
+            const cleanContent = (content || '').replace(/\*/g, ''); 
+
+            const articleContent = document.getElementById('articleContent');
+            const sourcesSection = document.getElementById('sourcesSection');
+            const sourcesList = document.getElementById('sourcesList');
+            const readingTime = document.getElementById('readingTime');
+
+            currentArticleId = query;
+            const wordCount = content ? content.split(/\s+/).length : 0;
+            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+            const readTimeSuffix = translations[currentLanguage].readingTimeSuffix || 'min read';
+            readingTime.textContent = `${readTime} ${readTimeSuffix}`;
+            
+            const locale = { 'id': 'id-ID', 'en': 'en-US', 'es': 'es-ES', 'fr': 'fr-FR', 'ja': 'ja-JP' };
+            const publishDate = new Date().toLocaleDateString(locale[currentLanguage] || 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            let formattedContent = formatContentWithEmphasis(cleanContent || '', query); // Use cleanContent
+            let imageWarningHtml = ''; // For error/warning messages
+            let contentAndImagesHtml = ''; // For the combined content+images
+
+            // --- Image Gallery Logic ---
+            if (imagesData.error === "CX_ID_NOT_SET") {
+                // Warning if CX_ID is not filled
+                imageWarningHtml = `
+                    <div class="p-4 my-6 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+                        <h4 class="font-bold">Fitur Gambar Google Search Belum Aktif</h4>
+                        <p>Untuk menampilkan galeri gambar di sini, Anda harus:</p>
+                        <ol class="list-decimal list-inside pl-2 mt-2">
+                            <li>Membuat Google Custom Search Engine (CX).</li>
+                            <li>Mendapatkan <strong>ID Mesin Telusur (CX ID)</strong>.</li>
+                            <li>Memasukkan ID tersebut ke variabel <strong>CX_ID</strong> di dalam file HTML ini (di dalam tag <code>&lt;script&gt;</code>).</li>
+                        </ol>
+                    </div>
+                `;
+                // If error, just show content without images
+                contentAndImagesHtml = `<div class="prose prose-lg max-w-none">${formattedContent}</div>`;
+
+            } else if (imagesData.error) {
+                // Warning if API error
+                imageWarningHtml = `
+                    <div class="p-4 my-6 bg-red-50 border-l-4 border-red-400 text-red-800">
+                        <h4 class="font-bold">Gagal Memuat Gambar</h4>
+                        <p>Terjadi kesalahan saat mengambil gambar dari Google Search: ${imagesData.error}</p>
+                    </div>
+                `;
+                // If error, just show content without images
+                contentAndImagesHtml = `<div class="prose prose-lg max-w-none">${formattedContent}</div>`;
+
+            } else if (imagesData && imagesData.length > 0) {
+                // SUCCESS CASE: Interleave images with paragraphs
+                
+                // Split content by </p> tag, keeping the tag
+                const paragraphs = formattedContent.split(/(<\/p>)/g);
+                let newContentHtml = '';
+                let imageIndex = 0;
+
+                for (let i = 0; i < paragraphs.length; i += 2) {
+                    const pText = paragraphs[i];
+                    const pEnd = paragraphs[i + 1] || ''; // Get the '</p>' or empty string
+                    
+                    if (pText.trim().length === 0) continue; // Skip empty strings
+
+                    newContentHtml += pText + pEnd; // Add the paragraph
+
+                    // Insert an image ONLY IF it's a paragraph (starts with <p) and we still have images
+                    if (imageIndex < imagesData.length && pText.trim().startsWith('<p')) {
+                        const imgData = imagesData[imageIndex];
+                        
+                        // Image will float on desktop (sm:float-...) and be full-width on mobile
+                        const floatClass = imageIndex % 2 === 0 ? 'sm:float-right sm:ml-4' : 'sm:float-left sm:mr-4';
+
+                        newContentHtml += `
+                            <div class="my-6 clear-both">
+                                <a href="${imgData.image.contextLink}" target="_blank" rel="noopener noreferrer" 
+                                   class="block w-full sm:w-60 ${floatClass} rounded-lg overflow-hidden shadow-md transition-transform transform hover:scale-105" 
+                                   title="${imgData.snippet}">
+                                    <img src="${imgData.image.thumbnailLink}" alt="${imgData.snippet}" 
+                                         class="w-full h-40 object-cover" 
+                                         onerror="this.onerror=null; this.src='https.placehold.co/400x200/eeeeee/aaaaaa?text=Image+Error'">
+                                </a>
+                            </div>
+                        `;
+                        imageIndex++;
+                    }
+                }
+                
+                contentAndImagesHtml = `<div class="prose prose-lg max-w-none">${newContentHtml}</div>`;
+
+            } else {
+                // Info if no images were found
+                imageWarningHtml = `<p class="text-gray-500 my-4 italic">Tidak ada gambar Google Search yang ditemukan untuk "${query}".</p>`;
+                contentAndImagesHtml = `<div class="prose prose-lg max-w-none">${formattedContent}</div>`;
+            }
+            // --- End Gallery Logic ---
+
+            // Render the full article
+            articleContent.innerHTML = `
+                <header class="mb-8 pb-6 border-b border-gray-200">
+                    <h1 class="text-3xl md:text-4xl font-bold text-dark mb-4">${capitalizeFirstLetter(query)}</h1>
+                    <div class="flex flex-wrap items-center text-sm text-gray-500">
+                        <span class="mr-4 flex items-center">
+                            <i class="fa-regular fa-user mr-1"></i> Nature AI (Grounded)
+                        </span>
+                        <span class="mr-4 flex items-center">
+                            <i class="fa-regular fa-calendar mr-1"></i> ${publishDate}
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fa-regular fa-clock mr-1"></i> ${readTime} ${readTimeSuffix}
+                        </span>
+                    </div>
+                </header>
+                
+                <!-- Display warning (if any) -->
+                ${imageWarningHtml}
+
+                <!-- The combined content and images are inserted here -->
+                ${contentAndImagesHtml}
+            `;
+
+            articleContent.classList.remove('hidden');
+
+            // Display Sources section (from Gemini data)
+            sourcesList.innerHTML = '';
+            if (sources && sources.length > 0) {
+                sources.forEach(source => {
+                    const li = document.createElement('li');
+                    li.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200';
+                    li.innerHTML = `
+                        <a href="${source.uri}" target="_blank" rel="noopener noreferrer" class="font-semibold text-primary hover:underline break-words">
+                            ${source.title}
+                        </a>
+                        <span class="block text-gray-500 text-xs break-all">${source.uri}</span>
+                    `;
+                    sourcesList.appendChild(li);
+                });
+                sourcesSection.classList.remove('hidden');
+            } else {
+                sourcesSection.classList.add('hidden');
+            }
+
+            // Load comments for this article
+            loadComments();
+        }
+
+        /**
+         * Formats the content, emphasizing keywords.
+         * @param {string} content - The HTML content string.
+         * @param {string} query - The search query.
+         * @returns {string} The formatted HTML string.
+         */
+        function formatContentWithEmphasis(content, query) {
+            const importantTerms = [
+                'penting', 'krusial', 'vital', 'signifikan', 'utama', 'kunci',
+                'berpengaruh', 'dampak', 'perubahan', 'konservasi', 'lestari',
+                'ancaman', 'adaptasi', 'unik', 'spesifik', 'kritis', 'prioritas',
+                'mengagumkan', 'luar biasa', 'menakjubkan', 'fundamental', 'esensial'
+            ];
+            
+            const queryTerms = query.split(/\s+/);
+            let formattedContent = content.replace(/<strong>/g, '<strong class="text-primary">').replace(/<\/strong>/g, '</strong>');
+            
+            const allTerms = [...new Set([...queryTerms, ...importantTerms])];
+            
+            allTerms.forEach(term => {
+                if (term.length > 3) {
+                    const regex = new RegExp(`(?<!<strong[^>]*>)\\b${term}\\b(?!<\\/strong>)`, 'gi');
+                    formattedContent = formattedContent.replace(regex, `<strong class="text-primary">${term}</strong>`);
+                }
+            });
+            
+            return formattedContent;
+        }
+
+        /**
+         * Displays an error message in the article content area.
+         * @param {string} message - The error message to display.
+         */
+        function displayError(message) {
+            const articleContent = document.getElementById('articleContent');
+            articleContent.innerHTML = `
+                <div class="text-center py-16 bg-red-50 border-2 border-red-300 rounded-xl p-8 shadow-lg">
+                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-600 mb-4 animate-pulse-sm"></i>
+                    <h2 class="text-2xl font-bold text-dark mb-4">Gagal Membuat Artikel</h2>
+                    <p class="text-gray-700 mb-6 font-medium">${message}</p>
+                    <button onclick="showSection('home')" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                        Kembali ke Beranda
+                    </button>
+                </div>
+            `;
+            articleContent.classList.remove('hidden');
+            document.getElementById('sourcesSection').classList.add('hidden');
+        }
+
+        // --- Comment System Functions ---
+
+        /**
+         * Loads comments from localStorage for the current article.
+         */
+        function loadComments() {
+            const storedComments = localStorage.getItem(`nature_comments_${currentArticleId}`);
+            if (storedComments) {
+                comments = JSON.parse(storedComments);
+            } else {
+                comments = [];
+            }
+            displayComments();
+        }
+
+        /**
+         * Renders the list of comments to the DOM.
+         */
+        function displayComments() {
+            const commentsList = document.getElementById('commentsList');
+            const commentsCount = document.getElementById('commentsCount');
+            
+            const commentsSuffix = translations[currentLanguage].commentsSuffix || 'Comments';
+            commentsCount.textContent = `${comments.length} ${commentsSuffix}`;
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fa-regular fa-comment text-3xl mb-3"></i>
+                        <p data-key="noComments">${translations[currentLanguage].noComments}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            commentsList.innerHTML = '';
+            comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'bg-white rounded-xl p-6 border border-gray-200';
+                
+                const date = new Date(comment.timestamp);
+                const locale = { 'id': 'id-ID', 'en': 'en-US', 'es': 'es-ES', 'fr': 'fr-FR', 'ja': 'ja-JP' };
+                const formattedDate = date.toLocaleDateString(locale[currentLanguage] || 'en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                
+                const replyText = translations[currentLanguage].replyPrefix || 'Reply';
+                const likeText = translations[currentLanguage].likePrefix || 'Like';
+
+                commentElement.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                                <i class="fa-regular fa-user text-primary"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-dark">${comment.name || 'Anonim'}</h4>
+                                <p class="text-sm text-gray-500">${formattedDate}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteComment('${comment.id}')" class="text-gray-400 hover:text-red-500 transition-colors" title="Hapus komentar">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">${comment.text}</p>
+                    <div class="flex items-center mt-4 pt-3 border-t border-gray-100">
+                        <button onclick="likeComment('${comment.id}')" class="flex items-center text-gray-500 hover:text-primary transition-colors mr-4">
+                            <i class="fa-regular fa-thumbs-up mr-1"></i>
+                            <span>${comment.likes || 0}</span>
+                        </button>
+                        <button onclick="replyToComment('${comment.id}')" class="flex items-center text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa-regular fa-comment-dots mr-1"></i>
+                            <span>${replyText}</span>
+                        </button>
+                    </div>
+                `;
+                
+                commentsList.appendChild(commentElement);
+            });
+        }
+
+        /**
+         * Handles the comment form submission.
+         * @param {Event} event - The form submit event.
+         */
+        function submitComment(event) {
+            event.preventDefault();
+            
+            const commentInput = document.getElementById('commentInput');
+            const commentName = document.getElementById('commentName');
+            const commentText = commentInput.value.trim();
+            
+            if (!commentText) {
+                alertModal(translations[currentLanguage].errorCommentEmpty);
+                return;
+            }
+            
+            if (commentText.length > 500) {
+                alertModal(translations[currentLanguage].errorCharLimit);
+                return;
+            }
+            
+            const newComment = {
+                id: generateId(),
+                name: commentName.value.trim() || 'Anonim',
+                text: commentText,
+                timestamp: new Date().toISOString(),
+                likes: 0
+            };
+            
+            comments.unshift(newComment);
+            saveComments();
+            displayComments();
+            
+            commentInput.value = '';
+            commentName.value = '';
+            document.getElementById('charCount').textContent = '0';
+            
+            showCommentSuccess();
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function saveComments() {
+            localStorage.setItem(`nature_comments_${currentArticleId}`, JSON.stringify(comments));
+        }
+
+        /**
+         * Shows a confirmation modal before deleting a comment.
+         * @param {string} commentId - The ID of the comment to delete.
+         */
+        function deleteComment(commentId) {
+            commentToDeleteId = commentId; 
+            showConfirmModal(translations[currentLanguage].confirmDelete, () => {
+                comments = comments.filter(comment => comment.id !== commentToDeleteId);
+                saveComments();
+                displayComments();
+                commentToDeleteId = null;
+                hideConfirmModal();
+            });
+        }
+
+        function likeComment(commentId) {
+            const comment = comments.find(c => c.id === commentId);
+            if (comment) {
+                comment.likes = (comment.likes || 0) + 1;
+                saveComments();
+                displayComments();
+            }
+        }
+
+        function replyToComment(commentId) {
+            const commentInput = document.getElementById('commentInput');
+            const comment = comments.find(c => c.id === commentId);
+            if (comment) {
+                commentInput.value = `@${comment.name} `;
+                commentInput.focus();
+                updateCharCount();
+            }
+        }
+
+        function updateCharCount() {
+            const commentInput = document.getElementById('commentInput');
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = commentInput.value.length;
+            
+            if (commentInput.value.length > 500) {
+                charCount.classList.add('text-red-500');
+            } else {
+                charCount.classList.remove('text-red-500');
+            }
+        }
+
+        /**
+         * Shows a temporary success notification for comment submission.
+         */
+        function showCommentSuccess() {
+            const successMessage = document.createElement('div');
+            successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in';
+            const message_lang = {
+                'id': 'Komentar berhasil dikirim!',
+                'en': 'Comment submitted successfully!',
+                'es': '¡Comentario enviado con éxito!',
+                'fr': 'Commentaire soumis avec succès !',
+                'ja': 'コメントが正常に送信されました。'
+            };
+            const messageText = message_lang[currentLanguage] || message_lang['en'];
+            successMessage.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa-regular fa-circle-check mr-2"></i>
+                    <span>${messageText}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(successMessage);
+            
+            setTimeout(() => {
+                successMessage.remove();
+            }, 3000);
+        }
+
+        // --- Event Listeners and Initialization ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLanguage(); // Load language first
+            showSection('home'); // Then show the home section
+            
+            // Search listeners
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Menu listener
+            document.getElementById('menuButton').addEventListener('click', function() {
+                document.getElementById('mobileMenu').classList.toggle('hidden');
+            });
+
+            // Comment listeners
+            document.getElementById('commentForm').addEventListener('submit', submitComment);
+            document.getElementById('commentInput').addEventListener('input', updateCharCount);
+
+            // Custom modal listeners
+            alertModalOk.addEventListener('click', hideAlertModal);
+            confirmModalCancel.addEventListener('click', hideConfirmModal);
+            confirmModalConfirm.addEventListener('click', () => {
+                if (typeof confirmAction === 'function') {
+                    confirmAction(); // Execute the stored callback
+                }
+            });
+            modalOverlay.addEventListener('click', hideAllModals);
+
+            // Event listener for all category buttons (using event delegation)
+            document.body.addEventListener('click', function(e) {
+                // Find the-closest parent that is a category button
+                const categoryButton = e.target.closest('.category-search-button');
+                
+                if (categoryButton) {
+                    e.preventDefault(); // Stop default action (especially for <a> tags)
+                    
+                    const searchTerm = categoryButton.dataset.searchTerm; 
+                    
+                    if (searchTerm) {
+                        searchCategory(searchTerm); 
+                    } else {
+                        console.warn(`data-search-term attribute not found.`);
+                    }
+                }
+            });
+        });
+
+        // Expose functions to global scope to be accessible by onclick attributes
+        window.showSection = showSection;
+        window.hideMobileMenu = hideMobileMenu;
+        window.performSearch = performSearch;
+        window.searchCategory = searchCategory;
+        window.deleteComment = deleteComment;
+        window.likeComment = likeComment;
+        window.replyToComment = replyToComment;
+        window.changeLanguage = changeLanguage; // Expose language change function
+    </script>
+
+    <style>
+        .section-hidden {
+            display: none;
+        }
+        
+        .section-active {
+            display: block;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Custom styles for the article content (Tailwind's @apply is not available here) */
+        .prose {
+            color: #374151; /* text-gray-700 */
+            line-height: 1.75;
+        }
+        
+        .prose h2 {
+            color: #111827; /* text-gray-900 */
+            font-weight: 700;
+            font-size: 1.5rem; /* text-2xl */
+            margin-top: 2.5rem; /* mt-10 */
+            margin-bottom: 1rem; /* mb-4 */
+            padding-bottom: 0.5rem; /* pb-2 */
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        }
+        
+        .prose h3 {
+            color: #111827; /* text-gray-900 */
+            font-weight: 600;
+            font-size: 1.25rem; /* text-xl */
+            margin-top: 2rem; /* mt-8 */
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        
+        .prose p {
+            margin-bottom: 1.25rem; /* mb-5 */
+            text-align: justify;
+        }
+        
+        .prose .lead {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500;
+            color: #4b5563; /* text-gray-600 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        
+        .prose strong {
+            font-weight: 700;
+            color: #065f46; /* text-primary */
+        }
+        
+        .prose ul, .prose ol {
+            margin-bottom: 1.25rem; /* mb-5 */
+            padding-left: 1.75rem; /* pl-7 */
+        }
+        
+        .prose li {
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+    </style>
+</body>
+</html>
